@@ -27,7 +27,16 @@ sudo apt install -y \
   xfce4-goodies \
   xorg \
   dbus-x11 \
-  lightdm
+  lightdm \
+  flatpak \
+  locales
+
+# --- FIX LOCALE ---
+sudo locale-gen en_US.UTF-8
+sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # --- CREATE USER ---
 if ! id "$WORK_USER" &>/dev/null; then
@@ -36,10 +45,10 @@ if ! id "$WORK_USER" &>/dev/null; then
   sudo usermod -aG sudo "$WORK_USER"
 fi
 
-# --- PARSEC ---
+# --- PARSEC (FLATPAK) ---
 if ! command -v parsec &>/dev/null; then
-  wget -qO /tmp/parsec.deb https://builds.parsec.app/package/parsec-linux.deb
-  sudo apt install -y /tmp/parsec.deb
+  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak install -y flathub com.parsec.Par
 fi
 
 # --- SET XFCE FOR USER ---

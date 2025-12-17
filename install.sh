@@ -23,7 +23,6 @@ sudo apt install -y \
   ca-certificates \
   gnupg \
   lsb-release \
-  software-properties-common \
   xfce4 \
   xfce4-goodies \
   xorg \

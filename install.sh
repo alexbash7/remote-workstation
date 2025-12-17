@@ -70,6 +70,10 @@ WantedBy=multi-user.target
 EOT
 sudo systemctl daemon-reload
 sudo systemctl enable x0vncserver.service
+# --- GOOGLE CHROME ---
+wget -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y /tmp/chrome.deb
+rm /tmp/chrome.deb
 # --- RUSTDESK INSTALL ---
 wget -O /tmp/rustdesk.deb https://github.com/rustdesk/rustdesk/releases/download/1.4.4/rustdesk-1.4.4-x86_64.deb
 sudo apt install -y /tmp/rustdesk.deb

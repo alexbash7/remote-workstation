@@ -48,7 +48,7 @@ fi
 # --- PARSEC (FLATPAK) ---
 if ! command -v parsec &>/dev/null; then
   sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  sudo flatpak install -y flathub com.parsec.Par
+  sudo flatpak install -y flathub com.parsec.parsec
 fi
 
 # --- SET XFCE FOR USER ---

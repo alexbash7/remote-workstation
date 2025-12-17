@@ -27,7 +27,8 @@ sudo apt install -y \
   lightdm \
   flatpak \
   locales \
-  tigervnc-standalone-server
+  tigervnc-standalone-server \
+  tigervnc-scraping-server
 # --- FIX LOCALE ---
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
@@ -75,14 +76,13 @@ Requires=lightdm.service
 Type=simple
 User=$WORK_USER
 Environment=DISPLAY=:0
-ExecStart=/usr/bin/x0vncserver -display :0 -passwordfile /home/$WORK_USER/.vnc/passwd -rfbport 5900
+ExecStart=/usr/bin/x0vncserver -display :0 -passwordfile /home/$WORK_USER/.vnc/passwd -rfbport 5900 -fg -localhost no
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOT
-
 sudo systemctl daemon-reload
 sudo systemctl enable x0vncserver.service
 # --- AUTOLOGIN ---

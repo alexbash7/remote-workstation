@@ -25,7 +25,6 @@ sudo apt install -y \
   xorg \
   dbus-x11 \
   lightdm \
-  flatpak \
   locales \
   tigervnc-standalone-server \
   tigervnc-scraping-server
@@ -40,24 +39,10 @@ if ! id "$WORK_USER" &>/dev/null; then
   echo "$WORK_USER:$WORK_PASSWORD" | sudo chpasswd
   sudo usermod -aG sudo "$WORK_USER"
 fi
-# --- PARSEC (FLATPAK) ---
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo flatpak install -y flathub com.parsecgaming.parsec
 # --- SET XFCE FOR USER ---
 sudo -u "$WORK_USER" bash <<EOT
 mkdir -p ~/.config
 echo "exec startxfce4 &" > ~/.xinitrc
-EOT
-# --- PARSEC AUTOSTART ---
-sudo -u "$WORK_USER" bash <<EOT
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/parsec.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Name=Parsec
-Exec=flatpak run com.parsecgaming.parsec
-X-GNOME-Autostart-enabled=true
-EOF
 EOT
 # --- VNC SETUP ---
 sudo -u "$WORK_USER" bash <<EOT
@@ -85,6 +70,24 @@ WantedBy=multi-user.target
 EOT
 sudo systemctl daemon-reload
 sudo systemctl enable x0vncserver.service
+# --- RUSTDESK INSTALL ---
+wget -O /tmp/rustdesk.deb https://github.com/rustdesk/rustdesk/releases/download/1.4.4/rustdesk-1.4.4-x86_64.deb
+sudo apt install -y /tmp/rustdesk.deb
+rm /tmp/rustdesk.deb
+# --- RUSTDESK SERVICE & PASSWORD ---
+sudo rustdesk --install-service
+sudo rustdesk --password "$RUSTDESK_PASSWORD"
+# --- RUSTDESK AUTOSTART ---
+sudo -u "$WORK_USER" bash <<EOT
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/rustdesk.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=RustDesk
+Exec=rustdesk
+X-GNOME-Autostart-enabled=true
+EOF
+EOT
 # --- AUTOLOGIN ---
 sudo mkdir -p /etc/lightdm/lightdm.conf.d
 sudo tee /etc/lightdm/lightdm.conf.d/50-autologin.conf >/dev/null <<EOT
@@ -93,4 +96,6 @@ autologin-user=$WORK_USER
 autologin-session=xfce
 EOT
 echo "=== Done. Reboot recommended ==="
-echo "After reboot, connect via VNC to IP:5900 with password from config.env"
+echo "After reboot:"
+echo "  - VNC: IP:5900 (password from VNC_PASSWORD)"
+echo "  - RustDesk: run 'rustdesk --get-id' to get ID, password from RUSTDESK_PASSWORD"

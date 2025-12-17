@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
-
 echo "=== Remote Workstation bootstrap started ==="
-
 # --- LOAD CONFIG ---
 if [ -f ./config.env ]; then
     export $(grep -v '^#' ./config.env | xargs)
@@ -10,7 +8,6 @@ else
     echo "config.env not found! Exiting..."
     exit 1
 fi
-
 # --- BASIC SYSTEM ---
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y \
@@ -30,33 +27,36 @@ sudo apt install -y \
   lightdm \
   flatpak \
   locales
-
 # --- FIX LOCALE ---
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-
 # --- CREATE USER ---
 if ! id "$WORK_USER" &>/dev/null; then
   sudo adduser --disabled-password --gecos "" "$WORK_USER"
   echo "$WORK_USER:$WORK_PASSWORD" | sudo chpasswd
   sudo usermod -aG sudo "$WORK_USER"
 fi
-
 # --- PARSEC (FLATPAK) ---
-if ! command -v parsec &>/dev/null; then
-  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  sudo flatpak install -y flathub com.parsecgaming.parsec
-fi
-
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo flatpak install -y flathub com.parsecgaming.parsec
 # --- SET XFCE FOR USER ---
 sudo -u "$WORK_USER" bash <<EOT
 mkdir -p ~/.config
 echo "exec startxfce4 &" > ~/.xinitrc
 EOT
-
+# --- PARSEC AUTOSTART ---
+sudo -u "$WORK_USER" bash <<EOT
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/parsec.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=Parsec
+Exec=flatpak run com.parsecgaming.parsec
+X-GNOME-Autostart-enabled=true
+EOF
+EOT
 # --- AUTOLOGIN ---
 sudo mkdir -p /etc/lightdm/lightdm.conf.d
 sudo tee /etc/lightdm/lightdm.conf.d/50-autologin.conf >/dev/null <<EOT
@@ -64,5 +64,4 @@ sudo tee /etc/lightdm/lightdm.conf.d/50-autologin.conf >/dev/null <<EOT
 autologin-user=$WORK_USER
 autologin-session=xfce
 EOT
-
 echo "=== Done. Reboot recommended ==="

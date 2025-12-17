@@ -26,7 +26,8 @@ sudo apt install -y \
   dbus-x11 \
   lightdm \
   flatpak \
-  locales
+  locales \
+  tigervnc-standalone-server
 # --- FIX LOCALE ---
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
@@ -57,6 +58,33 @@ Exec=flatpak run com.parsecgaming.parsec
 X-GNOME-Autostart-enabled=true
 EOF
 EOT
+# --- VNC SETUP ---
+sudo -u "$WORK_USER" bash <<EOT
+mkdir -p ~/.vnc
+echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
+chmod 600 ~/.vnc/passwd
+EOT
+# --- VNC AUTOSTART (x0vncserver) ---
+sudo tee /etc/systemd/system/x0vncserver.service >/dev/null <<EOT
+[Unit]
+Description=x0vncserver for sharing existing X display
+After=lightdm.service
+Requires=lightdm.service
+
+[Service]
+Type=simple
+User=$WORK_USER
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/x0vncserver -display :0 -passwordfile /home/$WORK_USER/.vnc/passwd -rfbport 5900
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOT
+
+sudo systemctl daemon-reload
+sudo systemctl enable x0vncserver.service
 # --- AUTOLOGIN ---
 sudo mkdir -p /etc/lightdm/lightdm.conf.d
 sudo tee /etc/lightdm/lightdm.conf.d/50-autologin.conf >/dev/null <<EOT
@@ -65,3 +93,4 @@ autologin-user=$WORK_USER
 autologin-session=xfce
 EOT
 echo "=== Done. Reboot recommended ==="
+echo "After reboot, connect via VNC to IP:5900 with password from config.env"

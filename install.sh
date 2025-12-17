@@ -3,6 +3,14 @@ set -e
 
 echo "=== Remote Workstation bootstrap started ==="
 
+# --- LOAD CONFIG ---
+if [ -f ./config.env ]; then
+    export $(grep -v '^#' ./config.env | xargs)
+else
+    echo "config.env not found! Exiting..."
+    exit 1
+fi
+
 # --- BASIC SYSTEM ---
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y \
@@ -19,7 +27,8 @@ sudo apt install -y \
   xfce4 \
   xfce4-goodies \
   xorg \
-  dbus-x11
+  dbus-x11 \
+  lightdm
 
 # --- CREATE USER ---
 if ! id "$WORK_USER" &>/dev/null; then
@@ -35,7 +44,7 @@ if ! command -v parsec &>/dev/null; then
 fi
 
 # --- SET XFCE FOR USER ---
-sudo -u "$WORK_USER" bash <<'EOT'
+sudo -u "$WORK_USER" bash <<EOT
 mkdir -p ~/.config
 echo "exec startxfce4 &" > ~/.xinitrc
 EOT
